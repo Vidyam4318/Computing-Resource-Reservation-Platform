@@ -21,13 +21,13 @@ const AdminDashboard = () => {
         fetchUsers();
     }, []);
 
-    // Function to toggle account status (Enable/Disable)
+    // Function to handle enabling/disabling the account and sending renewal email
     const handleAccountStatus = async (uid, disabled) => {
         try {
             const response = await fetch(`http://localhost:5000/users/${uid}/status`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ disabled }), // Send the new status to the server
+                body: JSON.stringify({ disabled }),
             });
 
             if (response.ok) {
@@ -37,7 +37,12 @@ const AdminDashboard = () => {
                         user.uid === uid ? { ...user, disabled } : user
                     )
                 );
-                alert(`User ${uid} has been ${disabled ? "disabled" : "enabled"} successfully!`);
+
+                if (!disabled) {
+                    alert(`User ${uid} has been enabled successfully! A renewal email has been sent.`);
+                } else {
+                    alert(`User ${uid} has been disabled successfully.`);
+                }
             } else {
                 alert("Failed to update account status. Please try again.");
             }
