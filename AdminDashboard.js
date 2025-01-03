@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import "./AdminDashboard.css";
 
-
 const AdminDashboard = () => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [showUsers, setShowUsers] = useState(false); // State to toggle user records
 
     // Fetch all users when the component loads
     useEffect(() => {
@@ -33,20 +33,15 @@ const AdminDashboard = () => {
             });
 
             if (response.ok) {
-                // Update the user's status in the state
                 setUsers((prev) =>
                     prev.map((user) =>
                         user.uid === uid ? { ...user, disabled } : user
                     )
                 );
 
-                if (!disabled) {
-                    alert(`User ${uid} has been enabled successfully! A renewal email has been sent.`);
-                } else {
-                    alert(`User ${uid} has been disabled successfully.`);
-                }
+                alert(`User ${uid} has been ${disabled ? "disabled" : "enabled"} successfully.`);
             } else {
-                alert("Failed to update account status. Please try again.");
+                alert("Failed to update account status.");
             }
         } catch (error) {
             alert("Error updating account status: " + error.message);
@@ -57,7 +52,7 @@ const AdminDashboard = () => {
     const handleResetPassword = async (uid) => {
         try {
             const response = await fetch(`http://localhost:5000/users/${uid}/reset-password`, {
-                method: "POST", // Ensure POST method is used
+                method: "POST",
             });
 
             if (response.ok) {
@@ -75,40 +70,49 @@ const AdminDashboard = () => {
     return (
         <div>
             <h1>Admin Dashboard</h1>
-            <table border="1">
-                <thead>
-                    <tr>
-                        <th>UID</th>
-                        <th>Email</th>
-                        <th>Created At</th>
-                        <th>Status</th>
-                        <th>Toggle Status</th>
-                        <th>Reset Password</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {users.map((user) => (
-                        <tr key={user.uid}>
-                            <td>{user.uid}</td>
-                            <td>{user.email}</td>
-                            <td>{new Date(user.createdAt).toLocaleString()}</td>
-                            <td>{user.disabled ? "Disabled" : "Enabled"}</td>
-                            <td>
-                                <button
-                                    onClick={() => handleAccountStatus(user.uid, !user.disabled)}
-                                >
-                                    {user.disabled ? "Enable" : "Disable"}
-                                </button>
-                            </td>
-                            <td>
-                                <button onClick={() => handleResetPassword(user.uid)}>
-                                    Reset Password
-                                </button>
-                            </td>
+
+            {/* Button to toggle user records */}
+            <button onClick={() => setShowUsers(!showUsers)}>
+                {showUsers ? "User Management Records" : "Show User Records"}
+            </button>
+
+            {/* Conditionally render user records */}
+            {showUsers && (
+                <table border="1">
+                    <thead>
+                        <tr>
+                            <th>UID</th>
+                            <th>Email</th>
+                            <th>Created At</th>
+                            <th>Status</th>
+                            <th>Toggle Status</th>
+                            <th>Reset Password</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {users.map((user) => (
+                            <tr key={user.uid}>
+                                <td>{user.uid}</td>
+                                <td>{user.email}</td>
+                                <td>{new Date(user.createdAt).toLocaleString()}</td>
+                                <td>{user.disabled ? "Disabled" : "Enabled"}</td>
+                                <td>
+                                    <button
+                                        onClick={() => handleAccountStatus(user.uid, !user.disabled)}
+                                    >
+                                        {user.disabled ? "Enable" : "Disable"}
+                                    </button>
+                                </td>
+                                <td>
+                                    <button onClick={() => handleResetPassword(user.uid)}>
+                                        Reset Password
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            )}
         </div>
     );
 };
