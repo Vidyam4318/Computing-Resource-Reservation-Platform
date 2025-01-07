@@ -1,121 +1,81 @@
 /* AdminDashboard.css */
 
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f7fa;
-}
-
-h1 {
-    text-align: center;
-    margin-top: 20px;
+/* Razorpay Orders Section Styling */
+div h3 {
+    font-size: 1.5rem;
     color: #333;
+    text-align: center;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    font-weight: bold;
 }
 
 table {
-    width: 90%;
-    margin: 20px auto;
+    width: 100%;
+    margin-top: 10px;
     border-collapse: collapse;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    background-color: #fff;
-    border-radius: 8px;
 }
 
 th, td {
-    padding: 12px;
+    padding: 10px;
     text-align: center;
     border: 1px solid #ddd;
+    font-size: 0.9rem;
 }
 
 th {
-    background-color: #4CAF50;
+    background-color: #4A90E2;
     color: white;
+    font-weight: bold;
 }
 
 td {
     background-color: #f9f9f9;
+    color: #333;
 }
 
-button {
-    padding: 8px 16px;
-    margin: 5px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.3s ease;
+    td:nth-child(odd) {
+        background-color: #e9f3ff;
+    }
+
+tr:hover td {
+    background-color: #f0f8ff;
 }
 
-    button:hover {
-        background-color: #45a049;
+/* Order Status Styling */
+.status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+    .status.completed {
+        background-color: #27ae60;
         color: white;
     }
 
-    /* Button styles for enabling and disabling account */
-    button:active {
-        background-color: #388e3c;
+    .status.pending {
+        background-color: #f39c12;
+        color: white;
     }
 
-    button:disabled {
-        background-color: #dcdcdc;
-        cursor: not-allowed;
+    .status.failed {
+        background-color: #e74c3c;
+        color: white;
     }
 
-/* Add some space between rows */
-tbody tr {
-    transition: background-color 0.3s ease;
+/* Payment Method Styling */
+.payment-method {
+    padding: 4px 10px;
+    background-color: #ecf0f1;
+    border-radius: 4px;
+    font-weight: bold;
 }
 
-    tbody tr:hover {
-        background-color: #f1f1f1;
+/* Responsive Design */
+@media (max-width: 768px) {
+    th, td {
+        padding: 8px;
+        font-size: 0.85rem;
     }
-
-/* Collapsible user details section */
-.user-details {
-    background-color: #f9f9f9;
-    padding: 10px;
-    margin-top: 10px;
-    border-radius: 5px;
-    border: 1px solid #ddd;
 }
-
-    .user-details p {
-        margin: 5px 0;
-    }
-
-button {
-    padding: 10px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-    button:hover {
-        background-color: #45a049;
-    }
-
-/* For when the user details are expanded */
-.user-details {
-    display: none;
-}
-
-tr.active .user-details {
-    display: block;
-}
-
-button.show-details {
-    background-color: #007bff;
-    color: white;
-}
-
-    button.show-details:hover {
-        background-color: #0056b3;
-    }
-
-    button.show-details:active {
-        background-color: #004085;
-    }
