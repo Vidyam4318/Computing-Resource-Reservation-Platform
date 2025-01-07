@@ -5,6 +5,8 @@ const AdminDashboard = () => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showUsers, setShowUsers] = useState(false); // State to toggle user records
+    const [orders, setOrders] = useState([]); // State for Razorpay orders
+    const [showOrders, setShowOrders] = useState(false); // State to toggle Razorpay orders
 
     // Fetch all users when the component loads
     useEffect(() => {
@@ -65,6 +67,17 @@ const AdminDashboard = () => {
         }
     };
 
+    // Fetch Razorpay orders when button is clicked
+    const fetchRazorpayOrders = async () => {
+        try {
+            const response = await fetch("http://localhost:5001/api/orders");
+            const data = await response.json();
+            setOrders(data); // Set the orders in state
+        } catch (error) {
+            console.error("Error fetching Razorpay orders:", error);
+        }
+    };
+
     if (loading) return <div>Loading users...</div>;
 
     return (
@@ -74,6 +87,14 @@ const AdminDashboard = () => {
             {/* Button to toggle user records */}
             <button onClick={() => setShowUsers(!showUsers)}>
                 {showUsers ? "User Management Records" : "Show User Records"}
+            </button>
+
+            {/* Button to toggle Razorpay orders */}
+            <button onClick={() => {
+                fetchRazorpayOrders(); // Fetch Razorpay orders when clicked
+                setShowOrders(!showOrders);
+            }}>
+                {showOrders ? "Hide Razorpay Orders" : "Show Razorpay Orders"}
             </button>
 
             {/* Conditionally render user records */}
@@ -112,6 +133,35 @@ const AdminDashboard = () => {
                         ))}
                     </tbody>
                 </table>
+            )}
+
+            {/* Conditionally render Razorpay orders */}
+            {showOrders && (
+                <div>
+                    <h3>Razorpay Orders</h3>
+                    <table border="1">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Email</th>
+                                <th>Payment Method</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {orders.map((order) => (
+                                <tr key={order.order_id}>
+                                    <td>{order.order_id}</td>
+                                    <td>{(order.amount / 100).toFixed(2)} {order.currency}</td>
+                                    <td>{order.status}</td>
+                                    <td>{order.email || 'N/A'}</td>
+                                    <td>{order.payment_details?.method || 'N/A'}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             )}
         </div>
     );
