@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import * as XLSX from 'xlsx';
+import { useAuth } from './authContext';  // Assuming you have an auth context or Firebase integration
 import './OrderPage.css';
 
-const OrdersPage = ({ onAddToCart }) => {
+
+const OrderPage = ({ onAddToCart }) => {
     const [participantName, setParticipantName] = useState('');
     const [quantity, setQuantity] = useState(1);
     const [selectedPlan, setSelectedPlan] = useState(null);
@@ -10,18 +14,22 @@ const OrdersPage = ({ onAddToCart }) => {
     const [startDate, setStartDate] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
     const [labFacility, setLabFacility] = useState('');
-    const [selectedLibrary, setSelectedLibrary] = useState(null); // Store only one selected library
+    const [selectedLibrary, setSelectedLibrary] = useState(null);
     const [file, setFile] = useState(null);
+    const [uploadedFiles, setUploadedFiles] = useState([]);
     const [loading, setLoading] = useState(false);
 
     const navigate = useNavigate();
+
+    // Fetch logged-in user's email from context or Firebase (assuming a context or Firebase setup)
+    const { user } = useAuth();
+    const userEmail = user ? user.email : 'user@example.com';  // Fallback to a default email if not logged in
 
     const planDetails = {
         shortTermInitiative: { baseAmount: 1000, duration: 10 },
         longTermInitiative: { baseAmount: 5000, duration: 30 },
     };
 
-    // Library Information
     const libraryInfo = {
         OpenMP: 'OpenMP is a parallel programming model for shared memory systems.',
         MPI: 'MPI is a standard for parallel programming in distributed memory systems.',
@@ -32,16 +40,14 @@ const OrdersPage = ({ onAddToCart }) => {
     useEffect(() => {
         if (selectedPlan) {
             const updatedEndDate = new Date(startDate);
-            updatedEndDate.setDate(
-                updatedEndDate.getDate() + planDetails[selectedPlan].duration * quantity
-            );
+            updatedEndDate.setDate(updatedEndDate.getDate() + planDetails[selectedPlan].duration * quantity);
             setEndDate(updatedEndDate);
         }
     }, [startDate, selectedPlan, quantity]);
 
     const handlePlanSelection = (plan) => {
         setSelectedPlan(plan);
-        setSelectedNodes(null); // Reset node selection on plan change
+        setSelectedNodes(null);
     };
 
     const handleNodeChange = (event) => {
@@ -51,9 +57,9 @@ const OrdersPage = ({ onAddToCart }) => {
     const handleLibrarySelection = (event) => {
         const { value, checked } = event.target;
         if (checked) {
-            setSelectedLibrary(value); // Only store one selected library
+            setSelectedLibrary(value);
         } else {
-            setSelectedLibrary(null); // Deselect if unchecked
+            setSelectedLibrary(null);
         }
     };
 
@@ -84,8 +90,34 @@ const OrdersPage = ({ onAddToCart }) => {
         onAddToCart(item);
     };
 
+    // Create Excel File Function
+    const createExcelFile = (uploadedFile) => {
+        const data = [[`Uploaded File: ${uploadedFile.name}`]];
+        const worksheet = XLSX.utils.aoa_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Files');
+        XLSX.writeFile(workbook, 'UploadedFiles.xlsx');
+    };
+
+    // Handle File Upload and Add to Excel
     const handleFileUpload = (event) => {
-        setFile(event.target.files[0]);
+        const uploadedFile = event.target.files[0];
+        if (uploadedFile) {
+            setFile(uploadedFile);
+            setUploadedFiles((prevFiles) => [...prevFiles, uploadedFile.name]);
+            createExcelFile(uploadedFile);
+        }
+    };
+
+    // Load Razorpay script dynamically
+    const loadRazorpayScript = () => {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.onload = () => resolve(true);
+            script.onerror = () => reject(new Error('Failed to load Razorpay SDK'));
+            document.body.appendChild(script);
+        });
     };
 
     const handlePayment = async () => {
@@ -93,11 +125,58 @@ const OrdersPage = ({ onAddToCart }) => {
             alert('Please enter the participant name.');
             return;
         }
+
         try {
             setLoading(true);
-            // Payment logic here
+            await loadRazorpayScript();
+
+            const response = await axios.post('http://localhost:5001/api/orders/create', {
+                amount: calculateAmount(),
+                currency: 'INR',
+                receipt: 'order_receipt',
+                email: userEmail,  // Send the logged-in user's email to Razorpay
+            });
+
+            console.log('Order Response:', response); // Log the response from the backend
+            const order = response.data.order;
+
+            const options = {
+                key: '',  // Add your Razorpay key here
+                amount: order.amount,
+                currency: order.currency,
+                order_id: order.id,
+                handler: function (response) {
+                    console.log('Payment Response:', response); // Log payment response
+                    axios
+                        .post('http://localhost:5001/api/orders/success', {
+                            order_id: order.id,
+                            payment_id: response.razorpay_payment_id,
+                            participantName,
+                        })
+                        .then(() => {
+                            alert('Payment successful!');
+                            navigate('/AutoInstallation');
+                        })
+                        .catch((error) => {
+                            console.error('Error during payment confirmation:', error);
+                            alert('Payment failed.');
+                        });
+                },
+                prefill: {
+                    name: participantName,
+                    email: userEmail,  // Use the logged-in user's email
+                    contact: '1234567890',
+                },
+                theme: {
+                    color: '#3399cc',
+                },
+            };
+
+            const rzp = new window.Razorpay(options);
+            rzp.open();
         } catch (error) {
-            console.error('Payment error:', error);
+            console.error('Error during payment:', error);
+            alert('Error during payment.');
         } finally {
             setLoading(false);
         }
@@ -105,11 +184,11 @@ const OrdersPage = ({ onAddToCart }) => {
 
     return (
         <div className="orderpage-container">
-            {/* Left Side: Show Pricing Plans or Selected Plan Details */}
+            <h1>Compute HPC Lab Resources</h1>
             <div className="left-panel">
                 {!selectedPlan ? (
                     <div className="pricing-section">
-                        <h2>Pricing Plans</h2>
+                        <h2>Pricing Models</h2>
                         <div className="pricing-cards">
                             <div
                                 className="pricing-card"
@@ -137,7 +216,6 @@ const OrdersPage = ({ onAddToCart }) => {
                 )}
             </div>
 
-            {/* Right Side: Show Order Details */}
             {selectedPlan && (
                 <div className="order-details">
                     <div className="card">
@@ -226,8 +304,6 @@ const OrdersPage = ({ onAddToCart }) => {
                                 SYCL
                             </label>
                         </div>
-
-                        {/* Show only the selected library's information */}
                         <div className="library-info">
                             {selectedLibrary && (
                                 <div className="info-item">
@@ -245,8 +321,11 @@ const OrdersPage = ({ onAddToCart }) => {
                         <p>End Date: {endDate.toISOString().split('T')[0]}</p>
                     </div>
 
-                    <button onClick={handleAddToCart}>Add to Cart</button>
-                    <button onClick={handlePayment} disabled={loading}>
+                    <button
+                        className="pay-button"
+                        onClick={handlePayment}
+                        disabled={loading || !participantName || !selectedNodes}
+                    >
                         {loading ? 'Processing...' : 'Proceed to Payment'}
                     </button>
                 </div>
@@ -255,5 +334,4 @@ const OrdersPage = ({ onAddToCart }) => {
     );
 };
 
-export default OrdersPage;
-http://localhost:5001/api/orders
+export default OrderPage;
