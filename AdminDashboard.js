@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./AdminDashboard.css";
+import { checkAuthState, logout } from "./firebaseConfig"; // Import the correct functions
 
 const AdminDashboard = () => {
     const [users, setUsers] = useState([]);
@@ -7,8 +8,9 @@ const AdminDashboard = () => {
     const [showUsers, setShowUsers] = useState(false); // State to toggle user records
     const [orders, setOrders] = useState([]); // State for Razorpay orders
     const [showOrders, setShowOrders] = useState(false); // State to toggle Razorpay orders
+    const [activeUser, setActiveUser] = useState(null);
 
-    // Fetch all users when the component loads
+    // Fetch user data and active user on component load
     useEffect(() => {
         const fetchUsers = async () => {
             try {
@@ -23,7 +25,29 @@ const AdminDashboard = () => {
         };
 
         fetchUsers();
+
+        // Check authentication state from Firebase
+        checkAuthState((user) => {
+            if (user) {
+                setActiveUser(user); // Set the logged-in user from Firebase
+            } else {
+                setActiveUser(null); // No user logged in
+            }
+        });
     }, []);
+
+    // Logout functionality
+    const handleLogout = () => {
+        logout()
+            .then(() => {
+                alert("You have been logged out.");
+                setActiveUser(null);
+                window.location.href = "/login"; // Redirect to login page
+            })
+            .catch((error) => {
+                console.error("Error logging out:", error);
+            });
+    };
 
     // Function to handle enabling/disabling the account and sending renewal email
     const handleAccountStatus = async (uid, disabled) => {
@@ -84,20 +108,32 @@ const AdminDashboard = () => {
         <div>
             <h1>Admin Dashboard</h1>
 
-            {/* Button to toggle user records */}
-            <button onClick={() => setShowUsers(!showUsers)}>
-                {showUsers ? "User Management Records" : "Show User Records"}
-            </button>
+            {/* Display logged-in user */}
+            {activeUser ? (
+                <div className="profile-info">
+                    <p><strong>Logged in as:</strong> {activeUser.email}</p>
+                    <button className="logout-btn" onClick={handleLogout}>Logout</button>
+                </div>
+            ) : (
+                <p>No active user found. Please log in again.</p>
+            )}
 
-            {/* Button to toggle Razorpay orders */}
-            <button onClick={() => {
-                fetchRazorpayOrders(); // Fetch Razorpay orders when clicked
-                setShowOrders(!showOrders);
-            }}>
-                {showOrders ? "Hide Razorpay Orders" : "Show Razorpay Orders"}
-            </button>
+            {/* Buttons to toggle records */}
+            <div style={{ marginBottom: "20px" }}>
+                <button onClick={() => setShowUsers(!showUsers)}>
+                    {showUsers ? "Hide User Records" : "Show User Records"}
+                </button>
+                <button
+                    onClick={() => {
+                        fetchRazorpayOrders();
+                        setShowOrders(!showOrders);
+                    }}
+                >
+                    {showOrders ? "Hide Razorpay Orders" : "Show Razorpay Orders"}
+                </button>
+            </div>
 
-            {/* Conditionally render user records */}
+            {/* User Records */}
             {showUsers && (
                 <table border="1">
                     <thead>
@@ -135,7 +171,7 @@ const AdminDashboard = () => {
                 </table>
             )}
 
-            {/* Conditionally render Razorpay orders */}
+            {/* Razorpay Orders */}
             {showOrders && (
                 <div>
                     <h3>Razorpay Orders</h3>
@@ -155,8 +191,8 @@ const AdminDashboard = () => {
                                     <td>{order.order_id}</td>
                                     <td>{(order.amount / 100).toFixed(2)} {order.currency}</td>
                                     <td>{order.status}</td>
-                                    <td>{order.email || 'N/A'}</td>
-                                    <td>{order.payment_details?.method || 'N/A'}</td>
+                                    <td>{order.email || "N/A"}</td>
+                                    <td>{order.payment_details?.method || "N/A"}</td>
                                 </tr>
                             ))}
                         </tbody>
