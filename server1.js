@@ -7,6 +7,7 @@ const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const UserModel = require("./users");
+const razorpayServer = require("./razorpayServer");
 
 const app = express();
 app.use(bodyParser.json());
@@ -30,8 +31,7 @@ admin.initializeApp({
 });
 
 // Secret key for JWT
-const JWT_SECRET = "291b602122c90c14743f705be8568da86692db1b302ae6e7627212826ce375f36b2351d2769f10224a2325a16efff03cb3f72e025b1ce4f4adcc961a84f80544"
-    ;
+const JWT_SECRET = "291b602122c90c14743f705be8568da86692db1b302ae6e7627212826ce375f36b2351d2769f10224a2325a16efff03cb3f72e025b1ce4f4adcc961a84f80544";
 
 // Configure Nodemailer
 const transporter = nodemailer.createTransport({
@@ -198,7 +198,7 @@ app.get("/users", async (req, res) => {
 // Sync Firebase users on server start
 syncFirebaseUsersToDB();
 
-// Start the server
+// Start the server on port 5000
 const PORT = 5000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
