@@ -115,7 +115,11 @@ const AdminDashboard = () => {
                     <button className="logout-btn" onClick={handleLogout}>Logout</button>
                 </div>
             ) : (
-                <p>No active user found. Please log in again.</p>
+                <div className="login-section">
+                    <a href="/login" className="aws-login-btn">
+                        Login to Admin Dashboard
+                    </a>
+                </div>
             )}
 
             {/* Buttons to toggle records */}
