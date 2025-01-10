@@ -31,21 +31,26 @@ h1 {
         font-size: 1.1em;
         color: #333;
         margin-bottom: 10px;
+        text-align: center;
     }
 
-/* Styling the logout button to resemble Google's */
+/* Styling the circular logout button */
 .logout-btn {
     background-color: #4285f4; /* Google blue color */
     color: white;
     font-size: 1em;
     font-weight: 500;
-    padding: 10px 20px;
+    width: 50px; /* Width and height for a circular button */
+    height: 50px;
     border: none;
-    border-radius: 50px; /* Rounded corners */
+    border-radius: 50%; /* Makes it circular */
     cursor: pointer;
     transition: background-color 0.3s ease;
-    width: 100%;
+    display: flex;
+    justify-content: center; /* Centers the text inside */
+    align-items: center; /* Centers the text inside */
     margin-top: 10px;
+    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
 }
 
     .logout-btn:hover {
@@ -77,7 +82,7 @@ h1 {
         background-color: #357ae8;
     }
 
-/* Style for showing/hiding user records and orders */
+/* Button styling for toggling user records and Razorpay orders */
 button {
     background-color: #4285f4;
     color: white;
@@ -98,8 +103,7 @@ div h3 {
     font-size: 1.5rem;
     color: #333;
     text-align: center;
-    margin-top: 15px;
-    margin-bottom: 15px;
+    margin: 15px 0;
     font-weight: bold;
 }
 
